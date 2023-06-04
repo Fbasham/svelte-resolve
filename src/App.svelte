@@ -1,6 +1,8 @@
 <script>
   let options = [];
-  let index = 0;
+  let index = -1;
+  let spinning = false;
+  let winner;
 
   function handleSubmit(e) {
     let option = e.target.option.value.trim();
@@ -10,30 +12,61 @@
     e.target.option.value = "";
   }
 
-  function spin(delay = 300) {
-    let duration = 2000 + Math.random() * 2000;
+  function spin() {
+    let delay = 150;
+    let duration = 2000 + Math.random() * options.length * 1000;
     let interval = setInterval(() => {
-      duration -= delay;
+      spinning = true;
       index = (index + 1) % options.length;
-      console.log(index, duration, delay);
-      if (duration <= 0) clearInterval(interval);
+      duration -= delay;
+      console.log(spinning, index, duration, delay);
+      if (duration <= 0) {
+        winner = options[index];
+        spinning = false;
+        clearInterval(interval);
+        return;
+      }
     }, delay);
   }
 </script>
 
-<h1>Resolve</h1>
+<h1>
+  R<span style="color:darkorchid">e</span>s<span style="color:darkorchid"
+    >o</span
+  >l<span style="color:darkorchid">v</span>e
+</h1>
 <form on:submit|preventDefault={handleSubmit}>
   <label>
     Option:
     <input name="option" />
   </label>
 </form>
-<button on:click={() => spin()}>Spin</button>
+<button
+  class="spinBtn"
+  on:click={spin}
+  disabled={spinning || options.length < 1}>Spin</button
+>
+{#if winner}
+  <p class="winText">
+    <strong>Winner: </strong><span style="color:darkorchid"
+      >{winner.option}</span
+    >
+  </p>
+{/if}
+
 <div class="options">
   {#each options as { id, option }}
-    <div class="option" class:active={options[index].id === id}>
+    <div
+      class="option"
+      class:winner={!spinning && winner && winner.id === id}
+      class:active={(!spinning && id === winner?.id) ||
+        (spinning && options[index]?.id === id)}
+    >
       <p>{option}</p>
-      <button on:click={() => (options = options.filter((o) => o.id !== id))}
+      <button
+        hidden={spinning}
+        disabled={spinning}
+        on:click={() => (options = options.filter((o) => o.id !== id))}
         >&times;</button
       >
     </div>
@@ -41,6 +74,23 @@
 </div>
 
 <style>
+  h1 {
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+  }
+  h1 span {
+    font-size: 2.7rem;
+  }
+  label {
+    font-size: 1.1rem;
+  }
+  input {
+    margin-bottom: 1rem;
+    margin-left: 0.5rem;
+    padding: 2px;
+    border: 2px solid darkorchid;
+    border-radius: 5px;
+  }
   .options {
     display: flex;
     flex-direction: column;
@@ -52,6 +102,7 @@
     padding: 0.5rem;
     background-color: darkorchid;
     color: white;
+    transition: 100ms;
   }
   .option button {
     cursor: pointer;
@@ -71,5 +122,30 @@
   .active {
     background-color: yellow;
     color: black;
+    transition: 100ms;
+  }
+  .spinBtn {
+    display: inline;
+    cursor: pointer;
+    border: 2px solid darkorchid;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    background-color: transparent;
+    color: darkorchid;
+    transition: 200ms;
+  }
+  .spinBtn:hover {
+    background-color: darkorchid;
+    color: white;
+  }
+  .winner {
+    background-color: darkgreen;
+    color: white;
+    transition: 100ms;
+  }
+  .winText {
+    display: inline;
+    margin-left: 1rem;
+    font-size: 1.1rem;
   }
 </style>
